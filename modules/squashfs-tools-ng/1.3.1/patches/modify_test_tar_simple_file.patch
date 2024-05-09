@@ -1,0 +1,52 @@
+--- tests/libtar/tar_simple.c
++++ tests/libtar/tar_simple.c
+@@ -4,6 +4,12 @@
+  *
+  * Copyright (C) 2019 David Oberhollenzer <goliath@infraroot.at>
+  */
++#include <unistd.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <linux/limits.h>
++#include <dirent.h>
++
+ #include "config.h"
+ #include "io/file.h"
+ #include "tar/tar.h"
+@@ -40,8 +46,36 @@ int main(int argc, char **argv)
+ 	char buffer[6];
+ 	sqfs_s64 ts;
+ 	istream_t *fp;
++	DIR *d;
++	struct dirent *dir;
++	char cwd[PATH_MAX];
+ 	(void)argc; (void)argv;
+
++	if (getcwd(cwd, sizeof(cwd)) != NULL) {
++		printf("Current working dir: %s\n", cwd);
++	} else {
++		perror("getcwd() error");
++		return 1;
++	}
++
++	printf(" > '.'\n");
++	d = opendir(".");
++	if (d) {
++		while ((dir = readdir(d)) != NULL) {
++			printf("%s\n", dir->d_name);
++		}
++		closedir(d);
++	}
++
++	printf("\n > 'tests/libtar/data/long-paths'\n");
++	d = opendir("tests/libtar/data/long-paths");
++	if (d) {
++		while ((dir = readdir(d)) != NULL) {
++			printf("%s\n", dir->d_name);
++		}
++		closedir(d);
++	}
++
+ 	fp = istream_open_file(STRVALUE(TESTPATH) "/" STRVALUE(TESTFILE));
+ 	TEST_NOT_NULL(fp);
+ 	TEST_ASSERT(read_header(fp, &hdr) == 0);
